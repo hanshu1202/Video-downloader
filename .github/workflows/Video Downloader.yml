@@ -33,19 +33,17 @@ jobs:
       - name: Install Updated yt-dlp & TLS Impersonator
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install --upgrade yt-dlp[default] curl_ciphersuites
+          python3 -m pip install --upgrade "yt-dlp[default,curl-cffi]"
 
       - name: Run Downloader with Live Progress Tracking
         run: |
           yt-dlp \
-            --impersonate "chrome:110" \
-            --user-agent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36" \
-            --client-certificate "" \
+            --impersonate "chrome" \
             --socket-timeout 30 \
             --geo-bypass \
             --newline \
             --progress-delta 2 \
-            -f "bestvideo+bestaudio/best" \
+            -f "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best" \
             --merge-output-format mp4 \
             -o "${{ github.event.inputs.video_title }}.%(ext)s" \
             "${{ github.event.inputs.viki_url }}"
@@ -55,5 +53,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.event.inputs.video_title }}-artifact
-          path: "${{ github.event.inputs.video_title }}.mp4"
+          path: "${{ github.event.inputs.video_title }}.*"
           retention-days: 3
