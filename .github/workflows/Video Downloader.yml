@@ -1,7 +1,16 @@
 name: Extract Viki Video
 
 on:
-  workflow_dispatch: # Allows manual trigger from the GitHub Actions tab
+  workflow_dispatch:
+    inputs:
+      viki_url:
+        description: 'Paste the Viki video URL here'
+        required: true
+        default: 'https://viki.com'
+      video_title:
+        description: 'Name for the downloaded file (no spaces)'
+        required: true
+        default: 'Viki_Video'
 
 jobs:
   download_video:
@@ -24,12 +33,9 @@ jobs:
       - name: Install Updated yt-dlp & TLS Impersonator
         run: |
           python3 -m pip install --upgrade pip
-          # curl_ciphersuites allows yt-dlp to natively mimic browser TLS handshakes
           python3 -m pip install --upgrade yt-dlp[default] curl_ciphersuites
 
       - name: Run Downloader with Live Progress Tracking
-        env:
-          VIKI_URL: "https://viki.com"
         run: |
           yt-dlp \
             --impersonate "chrome:110" \
@@ -41,14 +47,13 @@ jobs:
             --progress-delta 2 \
             -f "bestvideo+bestaudio/best" \
             --merge-output-format mp4 \
-            -o "Hotel_Del_Luna_Ep1.%(ext)s" \
-            "$VIKI_URL"
+            -o "${{ github.event.inputs.video_title }}.%(ext)s" \
+            "${{ github.event.inputs.viki_url }}"
 
       - name: Upload Video File as Artifact
-        if: success() # Only uploads if the download step finishes successfully
+        if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: Hotel-Del-Luna-Episode-1
-          path: "Hotel_Del_Luna_Ep1.mp4"
-          retention-days: 3 # Keeps the file available for 3 days before cleanup
-          
+          name: ${{ github.event.inputs.video_title }}-artifact
+          path: "${{ github.event.inputs.video_title }}.mp4"
+          retention-days: 3
